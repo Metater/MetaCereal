@@ -31,4 +31,22 @@ public static class TextUtils
     {
         return ToSnake(input).ToUpper();
     }
+
+    public static int CountLeadingTabs(string input)
+    {
+        int count = 0;
+        foreach (char c in input)
+        {
+            if (c == '\t')
+            {
+                count++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return count;
+
+    }
 }

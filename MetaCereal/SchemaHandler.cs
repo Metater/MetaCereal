@@ -1,11 +1,11 @@
 ﻿namespace MetaCereal;
 
-public class SchemaScanner
+public class SchemaHandler
 {
     private readonly CSharpCodeGen csGen = new();
     private readonly RustCodeGen rsGen = new();
 
-    public void Scan()
+    public void Handle()
     {
         var main = IOUtils.ReadSchema("main");
         int cursor = 0;
@@ -32,7 +32,7 @@ public class SchemaScanner
                     "udp-client-to-server" or
                     "udp-server-to-client":
                     selectedContainer = line;
-                    //Console.WriteLine(selectedContainer);
+                    rsGen.SelectContainer(selectedContainer);
                     break;
                 default:
                     if (selectedContainer is null)
@@ -44,42 +44,22 @@ public class SchemaScanner
                         string schemaName = line.Trim();
                         char firstChar = schemaName[0];
                         string[] schema;
+                        bool isShared = false;
                         if (firstChar == '$')
                         {
                             schemaName = schemaName[1..];
                             schema = IOUtils.ReadSchema($"data/shared/{schemaName}");
+                            isShared = true;
                         }
                         else
                         {
                             schema = IOUtils.ReadSchema($"data/{selectedContainer}/{schemaName}");
                         }
 
-                        //Console.WriteLine($"\t{schemaName}");
-                        HandleSchema(selectedContainer, schemaName, schema);
+                        rsGen.HandleSchema(isShared, schemaName, schema);
                     }
                     break;
             }
-        }
-    }
-    
-    private void HandleSchema(string selectedContainer, string schemaName, string[] schema)
-    {
-        foreach (var item in schema)
-        {
-            //Console.WriteLine($"\t\t{item}");
-        }
-
-        switch (selectedContainer)
-        {
-            case "tcp-client-to-server":
-                rsGen.HandleTcpCtoSSchema(schemaName, schema);
-                break;
-            case "tcp-server-to-client":
-                break;
-            case "udp-client-to-server":
-                break;
-            case "udp-server-to-client":
-                break;
         }
     }
 

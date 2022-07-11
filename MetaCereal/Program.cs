@@ -1,6 +1,6 @@
 ﻿Console.WriteLine("Hello, World!\n");
 
-SchemaScanner schemaScanner = new();
+SchemaHandler schemaHandler = new();
 
-schemaScanner.Scan();
-schemaScanner.Generate();
+schemaHandler.Handle();
+schemaHandler.Generate();

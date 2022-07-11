@@ -18,19 +18,28 @@ public class CodeBlock
         }
     }
 
-    public void A(string text)
+    public CodeBlock A(string text)
     {
         sb.Append(text);
+        return this;
     }
 
-    public void L(string line)
+    public CodeBlock L(params string[] lines)
     {
-        sb.AppendLine(line);
+        foreach (string line in lines)
+        {
+            sb.AppendLine(line);
+        }
+        return this;
     }
 
-    public void Append(CodeBlock other)
+    public CodeBlock Append(params CodeBlock[] blocks)
     {
-        L(other.Compile());
+        foreach (CodeBlock block in blocks)
+        {
+            L(block.Compile());
+        }
+        return this;
     }
 
     public string Compile()
