@@ -3,4 +3,5 @@
 SchemaHandler schemaHandler = new();
 
 schemaHandler.Handle();
-schemaHandler.Generate();
+
+schemaHandler.Write();

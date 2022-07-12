@@ -2,7 +2,7 @@
 
 public class RustCodeGen : AbstractCodeGen
 {
-    private string container = "";
+    private string? container;
 
     private int dataCount = 0;
     private CodeBlock dataEnum = new();
@@ -12,6 +12,8 @@ public class RustCodeGen : AbstractCodeGen
 
     private readonly List<CodeBlock> tcpCSDataTypes = new();
 
+    private readonly CodeBlock code = new();
+
 
     public override void SelectContainer(string container)
     {
@@ -20,7 +22,7 @@ public class RustCodeGen : AbstractCodeGen
         switch (container)
         {
             case "tcp-client-to-server":
-                GeneralInit("TcpCSData");
+                CommonInit("TcpCSData");
                 break;
             case "tcp-server-to-client":
                 break;
@@ -31,7 +33,7 @@ public class RustCodeGen : AbstractCodeGen
         }
     }
 
-    private void GeneralInit(string containerType)
+    private void CommonInit(string containerType)
     {
         dataEnum = new(
             "#[derive(Debug)]",
@@ -77,7 +79,7 @@ public class RustCodeGen : AbstractCodeGen
 
         dataEnumImpl.L($"\tpub const {upperSchemaName}: u8 = {dataCount};");
 
-        tcpCSDataDecodeImpl.L($"\t\t\tSelf::{upperSchemaName} => Ok(TcpCSData::{pascalSchemaName}(<{pascalSchemaName}Data as bincode::Decode>::decode(decoder)?)),");
+        dataDecodeImpl.L($"\t\t\tSelf::{upperSchemaName} => Ok(TcpCSData::{pascalSchemaName}(<{pascalSchemaName}Data as bincode::Decode>::decode(decoder)?)),");
 
         HandleTcpCtoSTopLevelSchema(schemaName, schema);
 
@@ -132,40 +134,59 @@ public class RustCodeGen : AbstractCodeGen
         Console.WriteLine();
     }
 
-    public void GenerateTcpCtoS()
-    {
-        CodeBlock code = new();
-
-        CodeBlock dataTypes = new CodeBlock().Append(tcpCSDataTypes.ToArray());
-
-        code.Append(
-            dataEnum.L(
-                "}"
-            ),
-
-            dataEnumImpl.L(
-                "}"
-            ),
-
-            tcpCSDataDecodeImpl.L(
-                "\t\t\tvariant => Err(bincode::error::DecodeError::UnexpectedVariant {",
-                "\t\t\t\tfound: variant as u32,",
-                "\t\t\t\ttype_name: \"TcpCSData\",",
-                "\t\t\t\tallowed: bincode::error::AllowedEnumVariants::Allowed(&[]),",
-                "\t\t\t})",
-                "\t\t}",
-                "\t}",
-                "}"
-            ),
-
-            dataTypes
-        );
-
-        Console.WriteLine(code.Compile());
-    }
-
     public override void Generate()
     {
-        GenerateTcpCtoS();
+        if (container is null)
+        {
+            return;
+        }
+
+        switch (container)
+        {
+            case "tcp-client-to-server":
+                CommonGenerate("TcpCSData");
+                GenerateDataDecodeImpl("TcpCSData");
+                break;
+            case "tcp-server-to-client":
+
+                break;
+            case "udp-client-to-server":
+
+                break;
+            case "udp-server-to-client":
+
+                break;
+        }
+    }
+
+    private void CommonGenerate(string containerType)
+    {
+        code.Append(dataEnum.L(
+            "}"
+        ));
+        code.Append(dataEnumImpl.L(
+            "}"
+        ));
+    }
+
+    private void GenerateDataDecodeImpl(string containerType)
+    {
+        code.Append(dataDecodeImpl.L(
+            "\t\t\tvariant => Err(bincode::error::DecodeError::UnexpectedVariant {",
+            "\t\t\t\tfound: variant as u32,",
+            $"\t\t\t\ttype_name: \"{containerType}\",",
+            "\t\t\t\tallowed: bincode::error::AllowedEnumVariants::Allowed(&[]),",
+            "\t\t\t})",
+            "\t\t}",
+            "\t}",
+            "}"
+        ));
+    }
+
+    public override void Write()
+    {
+        CodeBlock dataTypes = new CodeBlock().Append(tcpCSDataTypes.ToArray());
+        code.Append(dataTypes);
+        Console.WriteLine(code.Compile());
     }
 }

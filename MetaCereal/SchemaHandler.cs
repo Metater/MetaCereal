@@ -32,6 +32,7 @@ public class SchemaHandler
                     "udp-client-to-server" or
                     "udp-server-to-client":
                     selectedContainer = line;
+                    rsGen.Generate();
                     rsGen.SelectContainer(selectedContainer);
                     break;
                 default:
@@ -63,8 +64,8 @@ public class SchemaHandler
         }
     }
 
-    public void Generate()
+    public void Write()
     {
-        rsGen.Generate();
+        rsGen.Write();
     }
 }
